@@ -4,6 +4,7 @@ from svhn_dataset import SVHN
 import cv2
 import numpy as np
 import bboxes_utils
+from utils import create_anchors
 
 def draw_bboxes(img, bboxes):
     import cv2
@@ -15,36 +16,26 @@ def draw_bboxes(img, bboxes):
     cv2.imshow("image", im)
     cv2.waitKey(0)
 
-anchors = []
-
-a1 = [0.15, 0.2]
-a2 = [0.2, 0.3]
-a3 = [0.3, 0.6]
-a4 = [0.4, 0.75]
-a5 = [0.5, 0.85]
-
-anchors_count = 5
-for y in np.linspace(0, 1, 14):
-    for x in np.linspace(0, 1, 14):
-        anchors.append((y-a1[1]/2, x-a1[0]/2, y+a1[1]/2, x+a1[0]/2))
-        anchors.append((y-a2[1]/2, x-a2[0]/2, y+a2[1]/2, x+a2[0]/2))
-        anchors.append((y-a3[1]/2, x-a3[0]/2, y+a3[1]/2, x+a3[0]/2))
-        anchors.append((y-a4[1]/2, x-a4[0]/2, y+a4[1]/2, x+a4[0]/2))
-        anchors.append((y-a5[1]/2, x-a5[0]/2, y+a5[1]/2, x+a5[0]/2))
-
-anchors = np.array(anchors)
-
-
 
 model = tf.keras.models.load_model("model.h5", custom_objects={
                                    "SigmoidFocalCrossEntropy": tfa.losses.SigmoidFocalCrossEntropy()})
 
+# svhn = SVHN()
 
-image = cv2.imread("test.png")
+anchors = create_anchors()
+
+
+image = cv2.imread("test.jpeg")
+# data = svhn.test.take(1)
+# image = data.as_numpy_iterator().next()["image"]
+
 image = cv2.resize(image, (224, 224))
-# image = cv2.GaussianBlur(image, (3,3), 0)
-# image = cv2.Canny(image, 30, 150)
-# image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+image = cv2.GaussianBlur(image, (5,5), 0)
+image = cv2.Canny(image, 30, 150)
+image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+# cv2.imshow("Image", image)
+# cv2.waitKey(0)
+
 
 classes, bboxes = model.predict(np.array([image]))
 scores = classes[0, :, 1:].max(axis=1)
@@ -82,26 +73,7 @@ draw_bboxes(image, selected_boxes)
 #     X_test_multiples.append([multiple_h, multiple_w])
 # X_test = np.array(X_test)
 
-# anchors = []
-
-# a1 = [0.15, 0.2]
-# a2 = [0.2, 0.3]
-# a3 = [0.3, 0.6]
-# a4 = [0.4, 0.75]
-# a5 = [0.5, 0.85]
-
-# anchors_count = 5
-# for y in np.linspace(0, 1, 14):
-#     for x in np.linspace(0, 1, 14):
-#         anchors.append((y-a1[1]/2, x-a1[0]/2, y+a1[1]/2, x+a1[0]/2))
-#         anchors.append((y-a2[1]/2, x-a2[0]/2, y+a2[1]/2, x+a2[0]/2))
-#         anchors.append((y-a3[1]/2, x-a3[0]/2, y+a3[1]/2, x+a3[0]/2))
-#         anchors.append((y-a4[1]/2, x-a4[0]/2, y+a4[1]/2, x+a4[0]/2))
-#         anchors.append((y-a5[1]/2, x-a5[0]/2, y+a5[1]/2, x+a5[0]/2))
-
-# anchors = np.array(anchors)
-
-
+# anchors = create_anchors()
 
 
 # with open(f"svhn_competition.txt", "w", encoding="utf-8") as predictions_file:
@@ -146,4 +118,3 @@ draw_bboxes(image, selected_boxes)
 #         print(*output, file=predictions_file, sep='')
 
 
-# print()
